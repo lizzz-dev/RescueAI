@@ -1,0 +1,46 @@
+# RescueAI - hackathon MVP docker-compose
+#
+# Two modes are supported:
+#  1) Zero-config demo (default): backend uses a local SQLite file, no
+#     database service required. Just run `docker compose up`.
+#  2) PostgreSQL mode: uncomment the `db` service and set DATABASE_URL in
+#     backend's environment to point at it (see .env.example).
+
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: rescueai-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./rescueai.db}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - MODEL_NAME=${MODEL_NAME:-}
+
+  frontend:
+    build: ./frontend
+    container_name: rescueai-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_BASE=http://localhost:8000
+
+  # Optional: uncomment for real PostgreSQL instead of SQLite.
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: rescueai-db
+  #   environment:
+  #     - POSTGRES_USER=rescueai
+  #     - POSTGRES_PASSWORD=rescueai
+  #     - POSTGRES_DB=rescueai
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pg_data:/var/lib/postgresql/data
+
+# volumes:
+#   pg_data:
