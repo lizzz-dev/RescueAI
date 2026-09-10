@@ -1,0 +1,23 @@
+# Dependencies
+frontend/node_modules/
+node_modules/
+
+# Production build outputs
+frontend/dist/
+backend/static/
+
+# Local databases & caches
+rescueai.db
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.py[cod]
+*$py.class
+backend/__pycache__/
+backend/*/__pycache__/
+
+# Environment & local settings
+.env
+.DS_Store
+*.log
