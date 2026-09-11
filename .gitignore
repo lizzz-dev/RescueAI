@@ -3,7 +3,6 @@ frontend/node_modules/
 node_modules/
 
 # Production build outputs
-frontend/dist/
 backend/static/
 
 # Local databases & caches

@@ -1,31 +1,39 @@
-const BASE = "/api";
-const LIVE_FALLBACK = "https://west-charged-new-wholesale.trycloudflare.com/api";
+const IS_LOCAL =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+// On localhost, proxy via local Vite dev server. On public hosting (Vercel), connect to the live Cloudflare tunnel API
+const LIVE_BACKEND = "https://west-charged-new-wholesale.trycloudflare.com/api";
+const BASE = IS_LOCAL ? "/api" : LIVE_BACKEND;
 
 async function request(path, options = {}) {
   let res;
-  let useFallback = false;
+  let url = `${BASE}${path}`;
 
   try {
-    res = await fetch(`${BASE}${path}`, {
+    res = await fetch(url, {
       headers: { "Content-Type": "application/json" },
       ...options,
     });
     const contentType = res.headers.get("content-type") || "";
-    if (contentType.includes("text/html")) {
-      useFallback = true;
-    }
-  } catch (err) {
-    useFallback = true;
-  }
-
-  if (useFallback && LIVE_FALLBACK) {
-    try {
-      res = await fetch(`${LIVE_FALLBACK}${path}`, {
+    // If the response is HTML (e.g. Vercel SPA rewrite fallback instead of API JSON), failover to live tunnel
+    if (contentType.includes("text/html") && BASE !== LIVE_BACKEND) {
+      res = await fetch(`${LIVE_BACKEND}${path}`, {
         headers: { "Content-Type": "application/json" },
         ...options,
       });
-    } catch (e) {
-      // If both fail, let normal error handling run
+    }
+  } catch (err) {
+    if (BASE !== LIVE_BACKEND) {
+      try {
+        res = await fetch(`${LIVE_BACKEND}${path}`, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+      } catch (e) {
+        // let final handler throw
+      }
     }
   }
 
