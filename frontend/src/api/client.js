@@ -1,19 +1,43 @@
 const BASE = "/api";
+const LIVE_FALLBACK = "https://west-charged-new-wholesale.trycloudflare.com/api";
 
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-  if (!res.ok) {
-    let detail = res.statusText;
+  let res;
+  let useFallback = false;
+
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("text/html")) {
+      useFallback = true;
+    }
+  } catch (err) {
+    useFallback = true;
+  }
+
+  if (useFallback && LIVE_FALLBACK) {
+    try {
+      res = await fetch(`${LIVE_FALLBACK}${path}`, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+    } catch (e) {
+      // If both fail, let normal error handling run
+    }
+  }
+
+  if (!res || !res.ok) {
+    let detail = res ? res.statusText : "Network Error";
     try {
       const body = await res.json();
       detail = body.detail || JSON.stringify(body);
     } catch (e) {
       /* ignore parse failure */
     }
-    throw new Error(`${res.status}: ${detail}`);
+    throw new Error(`${res ? res.status : 500}: ${detail}`);
   }
   if (res.status === 204) return null;
   return res.json();
