@@ -21,3 +21,4 @@ backend/*/__pycache__/
 .env
 .DS_Store
 *.log
+cloudflared.exe
