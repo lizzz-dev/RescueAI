@@ -45,8 +45,12 @@ try:
     from database import SessionLocal
     with SessionLocal() as db:
         if db.query(models.Hospital).count() == 0:
-            import seed
-            seed.seed()
+            try:
+                import seed_pakistan
+                seed_pakistan.seed()
+            except Exception:
+                import seed
+                seed.seed()
 except Exception as e:
     logger.warning("Auto-seed check: %s", e)
 
