@@ -430,99 +430,190 @@ function GlobeScene({
   );
 }
 
-/* 2D Tactical Flat Grid Map */
-function FlatGridMap({ incidents, resources, hospitals, showIncidents, showHospitals, showResources }) {
-  const WIDTH = 640,
-    HEIGHT = 440,
-    PAD = 36;
+/* 2D Tactical Flat Grid Map — Perfectly sized and centered for the 520px container */
+function FlatGridMap({
+  incidents,
+  resources,
+  hospitals,
+  showIncidents,
+  showHospitals,
+  showResources,
+  onHover,
+}) {
+  const WIDTH = 920;
+  const HEIGHT = 520;
+  const PAD_X = 80;
+  const PAD_TOP = 30;
+  const PAD_BOTTOM = 95; // 95px clearance so bottom legend never covers Karachi / Gwadar
 
-  const bounds = { minLat: 23.5, maxLat: 37.2, minLon: 60.5, maxLon: 76.5 };
+  // Geographic bounds tightly fitted to Pakistan with breathing room
+  const bounds = { minLat: 23.3, maxLat: 37.4, minLon: 60.2, maxLon: 76.8 };
 
   const project = (lat, lon) => {
-    const x = PAD + ((lon - bounds.minLon) / (bounds.maxLon - bounds.minLon || 1)) * (WIDTH - 2 * PAD);
-    const y = HEIGHT - PAD - ((lat - bounds.minLat) / (bounds.maxLat - bounds.minLat || 1)) * (HEIGHT - 2 * PAD);
+    const x = PAD_X + ((lon - bounds.minLon) / (bounds.maxLon - bounds.minLon)) * (WIDTH - 2 * PAD_X);
+    const y =
+      HEIGHT -
+      PAD_BOTTOM -
+      ((lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * (HEIGHT - PAD_TOP - PAD_BOTTOM);
     return [x, y];
   };
 
   const borderPoints = PAKISTAN_BORDER.map(([lat, lon]) => project(lat, lon).join(",")).join(" ");
 
+  // Disperse same-city coordinates in 2D as well so dots never stack
+  const dispersedIncidents = useMemo(() => dispersePoints(incidents, 0.45), [incidents]);
+  const dispersedHospitals = useMemo(() => dispersePoints(hospitals, 0.38), [hospitals]);
+  const dispersedResources = useMemo(() => dispersePoints(resources, 0.5), [resources]);
+
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} style={{ width: "100%", borderRadius: "10px" }}>
+    <svg
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      style={{ width: "100%", height: "100%", display: "block" }}
+      preserveAspectRatio="xMidYMid meet"
+    >
       <rect x="0" y="0" width={WIDTH} height={HEIGHT} fill="#060a14" rx="10" />
 
-      {Array.from({ length: 8 }).map((_, i) => (
-        <line
-          key={`h${i}`}
-          x1={0}
-          y1={(HEIGHT / 8) * i}
-          x2={WIDTH}
-          y2={(HEIGHT / 8) * i}
-          stroke="#14203a"
-          strokeWidth="0.5"
-        />
-      ))}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <line
-          key={`v${i}`}
-          x1={(WIDTH / 10) * i}
-          y1={0}
-          x2={(WIDTH / 10) * i}
-          y2={HEIGHT}
-          stroke="#14203a"
-          strokeWidth="0.5"
-        />
-      ))}
+      {/* Tactical Lat/Lon Grid lines with coordinate labels */}
+      {[26, 30, 34].map((latVal) => {
+        const [, y] = project(latVal, bounds.minLon);
+        return (
+          <g key={`lat-${latVal}`}>
+            <line x1={0} y1={y} x2={WIDTH} y2={y} stroke="#14203a" strokeWidth="0.75" strokeDasharray="3 3" />
+            <text x={12} y={y + 3} fill="#475569" fontSize="9" fontFamily="monospace">
+              {latVal}°N
+            </text>
+          </g>
+        );
+      })}
 
+      {[64, 68, 72, 76].map((lonVal) => {
+        const [x] = project(bounds.minLat, lonVal);
+        return (
+          <g key={`lon-${lonVal}`}>
+            <line x1={x} y1={0} x2={x} y2={HEIGHT} stroke="#14203a" strokeWidth="0.75" strokeDasharray="3 3" />
+            <text x={x - 10} y={20} fill="#475569" fontSize="9" fontFamily="monospace">
+              {lonVal}°E
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Pakistan Border SVG Polygon with tactical glow */}
       <polygon
         points={borderPoints}
-        fill="rgba(56, 189, 248, 0.03)"
+        fill="rgba(56, 189, 248, 0.04)"
         stroke="#38bdf8"
-        strokeWidth="1.2"
-        strokeDasharray="4 2"
+        strokeWidth="1.6"
+        strokeDasharray="5 3"
       />
 
+      {/* Key City Landmark Hubs */}
       {KEY_HUBS.map((c) => {
         const [x, y] = project(c.lat, c.lon);
         return (
           <g key={c.name}>
-            <circle cx={x} cy={y} r={2.5} fill="#38bdf8" />
-            <text x={x + 5} y={y + 3} fill="#38bdf8" fontSize="8" fontFamily="monospace" fontWeight="bold">
+            <circle cx={x} cy={y} r={3} fill="#38bdf8" />
+            <circle cx={x} cy={y} r={7} fill="none" stroke="#38bdf8" strokeWidth="0.8" opacity="0.6" />
+            <text
+              x={x + 9}
+              y={y + 3}
+              fill="#38bdf8"
+              fontSize="9"
+              fontFamily="monospace"
+              fontWeight="bold"
+              letterSpacing="0.5px"
+            >
               {c.name}
             </text>
           </g>
         );
       })}
 
+      {/* Hospitals */}
       {showHospitals &&
-        hospitals.map((h) => {
+        dispersedHospitals.map((h) => {
           const [x, y] = project(h.latitude, h.longitude);
           return (
-            <g key={`h-${h.id}`}>
-              <rect x={x - 2.5} y={y - 2.5} width="5" height="5" fill={TYPE_COLORS.hospital} rx="1" />
+            <g
+              key={`h-${h.id}`}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() =>
+                onHover &&
+                onHover({
+                  type: "Hospital",
+                  title: h.name,
+                  city: h.city,
+                  beds: `${h.emergency_beds} ER / ${h.icu_beds} ICU`,
+                  color: TYPE_COLORS.hospital,
+                  lat: h.latitude,
+                  lon: h.longitude,
+                })
+              }
+              onMouseLeave={() => onHover && onHover(null)}
+            >
+              <rect x={x - 3} y={y - 3} width="6" height="6" fill={TYPE_COLORS.hospital} rx="1" />
               <title>{`${h.name} (${h.city})`}</title>
             </g>
           );
         })}
 
+      {/* Resources */}
       {showResources &&
-        resources.map((r) => {
+        dispersedResources.map((r) => {
           const [x, y] = project(r.latitude, r.longitude);
+          const col = TYPE_COLORS[r.resource_type] || "#38bdf8";
           return (
-            <g key={`r-${r.id}`}>
-              <circle cx={x} cy={y} r={1.8} fill={TYPE_COLORS[r.resource_type] || "#38bdf8"} />
+            <g
+              key={`r-${r.id}`}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() =>
+                onHover &&
+                onHover({
+                  type: "Resource",
+                  title: r.name,
+                  category: r.resource_type,
+                  status: r.status,
+                  color: col,
+                  lat: r.latitude,
+                  lon: r.longitude,
+                })
+              }
+              onMouseLeave={() => onHover && onHover(null)}
+            >
+              <circle cx={x} cy={y} r={2.5} fill={col} />
               <title>{`${r.name} (${r.resource_type})`}</title>
             </g>
           );
         })}
 
+      {/* Incidents */}
       {showIncidents &&
-        incidents.map((inc) => {
+        dispersedIncidents.map((inc) => {
           const [x, y] = project(inc.latitude, inc.longitude);
+          const isCrit = inc.severity === "CRITICAL";
+          const col = isCrit ? TYPE_COLORS.criticalIncident : TYPE_COLORS.incident;
           return (
-            <g key={`i-${inc.id}`}>
-              <circle cx={x} cy={y} r={4} fill="none" stroke={TYPE_COLORS.incident} strokeWidth="1" />
-              <circle cx={x} cy={y} r={2} fill={TYPE_COLORS.incident} />
-              <title>{`${inc.incident_type} (${inc.location})`}</title>
+            <g
+              key={`i-${inc.id}`}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() =>
+                onHover &&
+                onHover({
+                  type: "Incident",
+                  title: inc.incident_type,
+                  location: inc.location,
+                  severity: inc.severity,
+                  status: inc.status,
+                  color: col,
+                  lat: inc.latitude,
+                  lon: inc.longitude,
+                })
+              }
+              onMouseLeave={() => onHover && onHover(null)}
+            >
+              {isCrit && <circle cx={x} cy={y} r={7} fill="none" stroke={col} strokeWidth="1" opacity="0.6" />}
+              <circle cx={x} cy={y} r={isCrit ? 4.5 : 3.5} fill={col} />
+              <title>{`${inc.incident_type} (${inc.location}) — ${inc.severity || ""}`}</title>
             </g>
           );
         })}
@@ -771,6 +862,7 @@ export default function MapView({ incidents = [], resources = [], hospitals = []
             showIncidents={showIncidents}
             showHospitals={showHospitals}
             showResources={showResources}
+            onHover={setHovered}
           />
         )}
 
