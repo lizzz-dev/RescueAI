@@ -25,6 +25,7 @@ import MapPage from "./pages/MapPage.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import AuditLogs from "./pages/AuditLogs.jsx";
+import TacticalOperatorModal, { OPERATOR_PRESETS } from "./components/TacticalOperatorModal.jsx";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Command Center", icon: LayoutDashboard },
@@ -41,6 +42,23 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [currentTime, setCurrentTime] = useState("");
+  const [showOperatorModal, setShowOperatorModal] = useState(false);
+  const [activeOperator, setActiveOperator] = useState(() => {
+    try {
+      const saved = localStorage.getItem("rescueai_active_operator");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return OPERATOR_PRESETS[0]; // Defaults to OPERATOR-01 // TACTICAL CONTROLLER // NDMA HQ
+  });
+
+  const handleSelectOperator = (op) => {
+    setActiveOperator(op);
+    try {
+      localStorage.setItem("rescueai_active_operator", JSON.stringify(op));
+    } catch (e) {}
+    window.dispatchEvent(new CustomEvent("rescueai_operator_changed", { detail: op }));
+    setShowOperatorModal(false);
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -133,11 +151,31 @@ export default function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="commander-badge">
-            <div className="commander-avatar">AK</div>
-            <div>
-              <div className="commander-info-title">Amir Khan</div>
-              <div className="commander-info-role">COMMANDER // NDMA 1122</div>
+          <div
+            className="commander-badge interactive"
+            onClick={() => setShowOperatorModal(true)}
+            role="button"
+            tabIndex={0}
+            title="Click to Switch Tactical Callsign or Operational Role"
+            onKeyDown={(e) => e.key === "Enter" && setShowOperatorModal(true)}
+          >
+            <div
+              className="commander-avatar"
+              style={{
+                background: `linear-gradient(135deg, #1e3a8a, ${activeOperator?.color || "var(--cyan)"})`,
+              }}
+            >
+              {activeOperator?.initials || "OP"}
+            </div>
+            <div className="commander-info">
+              <div className="commander-info-title-row">
+                <span className="commander-info-title">{activeOperator?.name || "OPERATOR-01"}</span>
+                <span className="commander-status-dot" title="COMMS ONLINE // ENCRYPTED"></span>
+              </div>
+              <div className="commander-info-role">{activeOperator?.role || "TACTICAL CONTROLLER // NDMA HQ"}</div>
+            </div>
+            <div className="commander-switch-hint">
+              <span>SWITCH</span>
             </div>
           </div>
           <p className="sidebar-disclaimer">
@@ -175,6 +213,17 @@ export default function App() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Tactical Callsign & Operator Switcher Modal */}
+      <AnimatePresence>
+        {showOperatorModal && (
+          <TacticalOperatorModal
+            activeOperator={activeOperator}
+            onSelect={handleSelectOperator}
+            onClose={() => setShowOperatorModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

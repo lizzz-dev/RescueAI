@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import SeverityBadge from "./SeverityBadge.jsx";
 import ConfidenceBar from "./ConfidenceBar.jsx";
@@ -9,7 +9,26 @@ const fadeUp = {
 };
 
 export default function ResponsePlanPanel({ plan, onApprove, onReject, busy }) {
-  const [approverName, setApproverName] = useState("Commander Amir Khan");
+  const [approverName, setApproverName] = useState(() => {
+    try {
+      const saved = localStorage.getItem("rescueai_active_operator");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.name || "OPERATOR-01";
+      }
+    } catch (e) {}
+    return "OPERATOR-01";
+  });
+
+  useEffect(() => {
+    const handleOperatorChange = (e) => {
+      if (e.detail?.name) {
+        setApproverName(e.detail.name);
+      }
+    };
+    window.addEventListener("rescueai_operator_changed", handleOperatorChange);
+    return () => window.removeEventListener("rescueai_operator_changed", handleOperatorChange);
+  }, []);
   const [rejectReason, setRejectReason] = useState("");
   const [showReject, setShowReject] = useState(false);
 
