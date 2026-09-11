@@ -94,7 +94,14 @@ export default function App() {
 
       {/* Tactical Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-brand">
+        <div
+          className="sidebar-brand"
+          onClick={() => navigate("dashboard")}
+          title="Return to Command Center"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && navigate("dashboard")}
+        >
           <div className="brand-icon-box">
             <ShieldAlert size={22} />
           </div>
