@@ -48,7 +48,7 @@ HOSPITALS = [
 ]
 
 USERS = [
-    {"name": "Amir Khan", "email": "amir.commander@demo.rescueai", "role": "COMMANDER"},
+    {"name": "Tariq Malik", "email": "tariq.commander@demo.rescueai", "role": "COMMANDER"},
     {"name": "Sana Malik", "email": "sana.dispatcher@demo.rescueai", "role": "DISPATCHER"},
     {"name": "Bilal Ahmed", "email": "bilal.admin@demo.rescueai", "role": "ADMIN"},
     {"name": "Ayesha Raza", "email": "ayesha.field@demo.rescueai", "role": "FIELD_RESPONDER"},
