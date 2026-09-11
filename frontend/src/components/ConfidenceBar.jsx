@@ -1,16 +1,28 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 export default function ConfidenceBar({ label, value }) {
-  const pct = Math.round((value || 0) * 100);
-  const color = pct >= 80 ? "#16a34a" : pct >= 55 ? "#ca8a04" : "#dc2626";
+  const pct = Math.round((value ?? 0) * 100);
+
   return (
     <div className="confidence-row">
       <div className="confidence-label">
         <span>{label}</span>
-        <span>{pct}%</span>
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          {pct}%
+        </motion.span>
       </div>
       <div className="confidence-track">
-        <div className="confidence-fill" style={{ width: `${pct}%`, backgroundColor: color }} />
+        <motion.div
+          className="confidence-fill"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+        />
       </div>
     </div>
   );

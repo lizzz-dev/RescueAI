@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -22,6 +23,11 @@ const AGENT_PIPELINE = [
   { step: "05", name: "Hospital Agent", role: "ICU & Bed Triage" },
   { step: "06", name: "Planning Agent", role: "SOP RAG & Plan Builder" },
 ];
+
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function IncidentDetail({ incidentId, onBack }) {
   const [incident, setIncident] = useState(null);
@@ -137,23 +143,33 @@ export default function IncidentDetail({ incidentId, onBack }) {
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div className="page-header">
+      <motion.div className="page-header" {...fadeUp} transition={{ duration: 0.3 }}>
         <div className="header-titles">
           <h2>{incident.incident_type} // {incident.location}</h2>
           <p className="header-subtitle">
-            Sector ID: <span style={{ fontFamily: "var(--font-mono)", color: "#38bdf8" }}>{incident.id.slice(0, 8)}</span> • Reported {new Date(incident.created_at).toLocaleTimeString()}
+            Sector ID: <span style={{ fontFamily: "var(--font-mono)", color: "#22d3ee" }}>{incident.id.slice(0, 8)}</span> • Reported {new Date(incident.created_at).toLocaleTimeString()}
           </p>
         </div>
         <SeverityBadge severity={incident.severity} />
-      </div>
+      </motion.div>
 
       {/* Multi-Agent Visual Pipeline Tracker */}
-      <div className="agent-pipeline">
+      <motion.div
+        className="agent-pipeline"
+        initial="initial"
+        animate="animate"
+        variants={{ animate: { transition: { staggerChildren: 0.08 } } }}
+      >
         {AGENT_PIPELINE.map((ag, idx) => {
           const isDone = plan != null;
           const isCurrent = analyzing && !isDone;
           return (
-            <div key={ag.step} className={`agent-node ${isCurrent ? "active" : ""}`}>
+            <motion.div
+              key={ag.step}
+              className={`agent-node ${isCurrent ? "active" : ""}`}
+              variants={fadeUp}
+              transition={{ duration: 0.3 }}
+            >
               <div className="agent-node-num">AGENT {ag.step}</div>
               <div className="agent-node-name">{ag.name}</div>
               <div className="agent-node-role">{ag.role}</div>
@@ -170,12 +186,12 @@ export default function IncidentDetail({ incidentId, onBack }) {
                   "PENDING"
                 )}
               </div>
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
-      <div className="incident-meta-grid">
+      <motion.div className="incident-meta-grid" {...fadeUp} transition={{ delay: 0.2, duration: 0.4 }}>
         <div>
           <div className="meta-item-label">Status</div>
           <div className="meta-item-value">
@@ -194,7 +210,7 @@ export default function IncidentDetail({ incidentId, onBack }) {
         </div>
         <div>
           <div className="meta-item-label">Critical Hazards</div>
-          <div className="meta-item-value" style={{ color: "#f87171" }}>
+          <div className="meta-item-value" style={{ color: "#fb7185" }}>
             {incident.hazards?.join(" • ") || "None flagged"}
           </div>
         </div>
@@ -204,23 +220,23 @@ export default function IncidentDetail({ incidentId, onBack }) {
             {new Date(incident.created_at).toLocaleString()}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {incident.conflicting_info && (
-        <div className="alert alert-warning">
+        <motion.div className="alert alert-warning" {...fadeUp} transition={{ delay: 0.3 }}>
           <AlertTriangle size={18} />
           <div>
             <strong>CONFLICTING CASUALTY / HAZARD REPORTS DETECTED:</strong>
             <p style={{ margin: "4px 0 0 0" }}>{incident.conflict_notes}</p>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Reports Section */}
-      <div className="section-card">
+      <motion.div className="section-card" {...fadeUp} transition={{ delay: 0.3, duration: 0.4 }}>
         <div className="section-header">
           <h3>
-            <Layers size={17} color="#38bdf8" />
+            <Layers size={17} color="#22d3ee" />
             Field & Citizen Incoming Reports ({incident.reports?.length || 0})
           </h3>
         </div>
@@ -238,7 +254,7 @@ export default function IncidentDetail({ incidentId, onBack }) {
             <tbody>
               {incident.reports?.map((r) => (
                 <tr key={r.id}>
-                  <td style={{ color: "#f1f5f9", fontWeight: 500 }}>"{r.raw_text}"</td>
+                  <td style={{ color: "#e2e8f0", fontWeight: 500 }}>"{r.raw_text}"</td>
                   <td>
                     <span className="stat-badge-tag">{r.source_type}</span>
                   </td>
@@ -276,37 +292,72 @@ export default function IncidentDetail({ incidentId, onBack }) {
             <option value="CITIZEN">Citizen (911/1122)</option>
             <option value="SOCIAL_MEDIA">Social Media Intelligence</option>
           </select>
-          <button className="btn" type="submit" disabled={busy}>
+          <motion.button className="btn" type="submit" disabled={busy} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Send size={14} /> Transmit
-          </button>
+          </motion.button>
         </form>
-      </div>
+      </motion.div>
 
       {/* AI Pipeline Trigger / Result */}
-      {!plan && (
-        <div className="section-card center-cta">
-          <Bot size={36} color="#3b82f6" style={{ marginBottom: "12px" }} />
-          <h3 style={{ margin: "0 0 6px 0", color: "#f1f5f9" }}>AI Multi-Agent Response Plan Not Synthesized</h3>
-          <p className="muted" style={{ margin: "0 0 20px 0", maxWidth: "520px", marginInline: "auto" }}>
-            Trigger the autonomous 6-agent pipeline to calculate severity, evaluate secondary risks, match nearest rescue units, route to available ICU beds, and pull Standard Operating Procedures.
-          </p>
-          <button className="btn btn-primary" onClick={runAnalysis} disabled={analyzing}>
-            <Sparkles size={16} />
-            {analyzing ? "Synthesizing Multi-Agent Strategy..." : "Execute 6-Agent AI Analysis"}
-          </button>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {!plan && (
+          <motion.div
+            className="section-card center-cta"
+            key="no-plan"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <Bot size={40} color="#6384ff" style={{ marginBottom: "16px" }} />
+            </motion.div>
+            <h3 style={{ margin: "0 0 6px 0", color: "#e2e8f0" }}>AI Multi-Agent Response Plan Not Synthesized</h3>
+            <p className="muted" style={{ margin: "0 0 24px 0", maxWidth: "520px", marginInline: "auto" }}>
+              Trigger the autonomous 6-agent pipeline to calculate severity, evaluate secondary risks, match nearest rescue units, route to available ICU beds, and pull Standard Operating Procedures.
+            </p>
+            <motion.button
+              className="btn btn-primary"
+              onClick={runAnalysis}
+              disabled={analyzing}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              animate={!analyzing ? { boxShadow: ["0 0 20px rgba(99, 102, 241, 0.3)", "0 0 35px rgba(99, 102, 241, 0.5)", "0 0 20px rgba(99, 102, 241, 0.3)"] } : {}}
+              transition={!analyzing ? { boxShadow: { duration: 2, repeat: Infinity } } : {}}
+            >
+              <Sparkles size={16} />
+              {analyzing ? "Synthesizing Multi-Agent Strategy..." : "Execute 6-Agent AI Analysis"}
+            </motion.button>
+          </motion.div>
+        )}
 
-      {plan && (
-        <div className="section-card">
-          <ResponsePlanPanel plan={plan} onApprove={approve} onReject={reject} busy={busy} />
-          {plan.approval_status === "APPROVED" && incident.status === "DISPATCHED" && (
-            <button className="btn btn-approve" style={{ marginTop: 16 }} onClick={resolve} disabled={busy}>
-              <CheckCircle2 size={16} /> Close & Mark Crisis Resolved
-            </button>
-          )}
-        </div>
-      )}
+        {plan && (
+          <motion.div
+            className="section-card"
+            key="plan"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <ResponsePlanPanel plan={plan} onApprove={approve} onReject={reject} busy={busy} />
+            {plan.approval_status === "APPROVED" && incident.status === "DISPATCHED" && (
+              <motion.button
+                className="btn btn-approve"
+                style={{ marginTop: 16 }}
+                onClick={resolve}
+                disabled={busy}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <CheckCircle2 size={16} /> Close & Mark Crisis Resolved
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

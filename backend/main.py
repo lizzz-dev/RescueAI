@@ -75,7 +75,13 @@ def health():
 
 
 # Serve the built React frontend
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+# Check frontend/dist first for local development, fall back to backend/static for Docker/prod
+_frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+if os.path.exists(_frontend_dist) and os.path.exists(os.path.join(_frontend_dist, "index.html")):
+    STATIC_DIR = _frontend_dist
+else:
+    STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
 if os.path.exists(STATIC_DIR):
     assets_dir = os.path.join(STATIC_DIR, "assets")
     if os.path.exists(assets_dir):
@@ -83,4 +89,8 @@ if os.path.exists(STATIC_DIR):
 
     @app.get("/{catchall:path}")
     def serve_react_app(catchall: str):
-        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+        response = FileResponse(os.path.join(STATIC_DIR, "index.html"))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response

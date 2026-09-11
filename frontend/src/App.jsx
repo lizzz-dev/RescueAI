@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   AlertOctagon,
@@ -13,6 +14,8 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
+import PageTransition from "./components/PageTransition.jsx";
+import ParticleBackground from "./components/ParticleBackground.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Incidents from "./pages/Incidents.jsx";
 import IncidentDetail from "./pages/IncidentDetail.jsx";
@@ -86,6 +89,9 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {/* Ambient particle network */}
+      <ParticleBackground />
+
       {/* Tactical Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -155,7 +161,11 @@ export default function App() {
         </header>
 
         <main className="main-content">
-          {renderPage()}
+          <AnimatePresence mode="wait">
+            <PageTransition pageKey={page + (selectedIncidentId || "")}>
+              {renderPage()}
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
     </div>

@@ -1,6 +1,12 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import SeverityBadge from "./SeverityBadge.jsx";
 import ConfidenceBar from "./ConfidenceBar.jsx";
+
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function ResponsePlanPanel({ plan, onApprove, onReject, busy }) {
   const [approverName, setApproverName] = useState("Commander Amir Khan");
@@ -13,16 +19,21 @@ export default function ResponsePlanPanel({ plan, onApprove, onReject, busy }) {
   const isPending = plan.approval_status === "PENDING";
 
   return (
-    <div className="plan-panel">
-      <div className="plan-header">
+    <motion.div
+      className="plan-panel"
+      initial="initial"
+      animate="animate"
+      variants={{ animate: { transition: { staggerChildren: 0.06 } } }}
+    >
+      <motion.div className="plan-header" variants={fadeUp} transition={{ duration: 0.3 }}>
         <h3>AI Response Recommendation</h3>
         <SeverityBadge severity={plan.severity} />
-      </div>
+      </motion.div>
 
-      <p className="plan-summary">{plan.summary}</p>
+      <motion.p className="plan-summary" variants={fadeUp} transition={{ duration: 0.3 }}>{plan.summary}</motion.p>
 
-      <div className="plan-grid">
-        <div className="plan-section">
+      <motion.div className="plan-grid" variants={{ animate: { transition: { staggerChildren: 0.08 } } }}>
+        <motion.div className="plan-section" variants={fadeUp} transition={{ duration: 0.3 }}>
           <h4>Recommended Resources</h4>
           <ul>
             {plan.recommended_resources?.map((rec) => (
@@ -40,9 +51,9 @@ export default function ResponsePlanPanel({ plan, onApprove, onReject, busy }) {
               </li>
             ))}
           </ul>
-        </div>
+        </motion.div>
 
-        <div className="plan-section">
+        <motion.div className="plan-section" variants={fadeUp} transition={{ duration: 0.3 }}>
           <h4>Recommended Hospital</h4>
           {hospital ? (
             <div>
@@ -57,47 +68,47 @@ export default function ResponsePlanPanel({ plan, onApprove, onReject, busy }) {
           ) : (
             <div className="gap-text">⚠ No operational hospital found.</div>
           )}
-        </div>
+        </motion.div>
 
-        <div className="plan-section">
+        <motion.div className="plan-section" variants={fadeUp} transition={{ duration: 0.3 }}>
           <h4>Risks / Secondary Hazards</h4>
           <ul className="risk-list">
             {plan.risks?.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ul>
-        </div>
+        </motion.div>
 
-        <div className="plan-section">
+        <motion.div className="plan-section" variants={fadeUp} transition={{ duration: 0.3 }}>
           <h4>Response Sequence</h4>
           <ol>
             {plan.actions?.map((a, idx) => (
               <li key={idx}>{a}</li>
             ))}
           </ol>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {plan.information_gaps?.length > 0 && (
-        <div className="info-gaps">
+        <motion.div className="info-gaps" variants={fadeUp} transition={{ duration: 0.3 }}>
           <h4>Information Gaps</h4>
           <ul>
             {plan.information_gaps.map((g, idx) => (
               <li key={idx}>{g}</li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       )}
 
-      <div className="plan-section" style={{ marginTop: 16 }}>
+      <motion.div className="plan-section" style={{ marginTop: 16 }} variants={fadeUp} transition={{ duration: 0.3 }}>
         <h4>AI Confidence</h4>
         {Object.entries(plan.confidence || {}).map(([k, v]) => (
           <ConfidenceBar key={k} label={k.replace(/_/g, " ")} value={v} />
         ))}
         <p className="muted small">Confidence reflects the AI's certainty in its own analysis, not a guarantee of ground truth.</p>
-      </div>
+      </motion.div>
 
-      <details className="explainability-details">
+      <motion.details className="explainability-details" variants={fadeUp} transition={{ duration: 0.3 }}>
         <summary>Why this recommendation? (AI Explainability)</summary>
         <ul>
           {plan.explainability?.severity_reasons?.map((r, idx) => (
@@ -107,46 +118,52 @@ export default function ResponsePlanPanel({ plan, onApprove, onReject, busy }) {
         {plan.knowledge_base_refs?.length > 0 && (
           <p className="muted small">Guidance referenced: {plan.knowledge_base_refs.join(", ")}</p>
         )}
-      </details>
+      </motion.details>
 
-      <div className="approval-status-row">
+      <motion.div className="approval-status-row" variants={fadeUp} transition={{ duration: 0.3 }}>
         Approval status: <strong>{plan.approval_status}</strong>
         {plan.approved_by && <span className="muted"> by {plan.approved_by}</span>}
-      </div>
+      </motion.div>
 
       {isPending && (
-        <div className="approval-actions">
+        <motion.div className="approval-actions" variants={fadeUp} transition={{ duration: 0.3 }}>
           <input
             className="text-input"
             value={approverName}
             onChange={(e) => setApproverName(e.target.value)}
             placeholder="Approver name"
+            style={{ maxWidth: "240px" }}
           />
-          <button className="btn btn-approve" disabled={busy} onClick={() => onApprove(approverName)}>
+          <motion.button className="btn btn-approve" disabled={busy} onClick={() => onApprove(approverName)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             APPROVE RESPONSE
-          </button>
-          <button className="btn btn-reject" disabled={busy} onClick={() => setShowReject((s) => !s)}>
+          </motion.button>
+          <motion.button className="btn btn-reject" disabled={busy} onClick={() => setShowReject((s) => !s)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             REJECT
-          </button>
+          </motion.button>
           {showReject && (
-            <div className="reject-box">
+            <motion.div
+              className="reject-box"
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              transition={{ duration: 0.2 }}
+            >
               <input
                 className="text-input"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Reason for rejection"
               />
-              <button className="btn btn-reject" disabled={busy} onClick={() => onReject(approverName, rejectReason)}>
+              <motion.button className="btn btn-reject" disabled={busy} onClick={() => onReject(approverName, rejectReason)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 Confirm Reject
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       )}
 
       <p className="safety-note">
         This is an AI-generated recommendation. No real dispatch occurs until an authorized human approves it above; approval here only triggers a simulated dispatch for this demo.
       </p>
-    </div>
+    </motion.div>
   );
 }
