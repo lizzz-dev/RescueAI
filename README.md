@@ -1,13 +1,3 @@
----
-title: RescueAI
-emoji: 🚨
-colorFrom: red
-colorTo: blue
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # RescueAI — Tactical AI Emergency Response & Operations Command
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -197,6 +187,7 @@ This repository is pre-configured for one-click deployment on **Hugging Face Spa
    git push space main
    ```
 4. Hugging Face automatically detects the root `Dockerfile` and deploys the unified app on port `7860`.
+   *(Space metadata: `title: RescueAI`, `emoji: 🚨`, `sdk: docker`, `app_port: 7860`)*
 
 ---
 
