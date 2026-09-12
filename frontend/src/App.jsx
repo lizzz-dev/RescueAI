@@ -38,6 +38,38 @@ const NAV_ITEMS = [
   { id: "audit", label: "Audit Ledger", icon: FileText },
 ];
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.warn("RescueAI module render error caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="section-card" style={{ textAlign: "center", padding: "40px 20px" }}>
+          <h3 style={{ color: "#f43f5e", marginBottom: "8px" }}>Telemetry Feed Exception</h3>
+          <p className="muted" style={{ marginBottom: "20px" }}>
+            This view encountered a display error. You can reset it or navigate using the sidebar without refreshing.
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Reset Module View
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
@@ -208,7 +240,9 @@ export default function App() {
         <main className="main-content">
           <AnimatePresence mode="wait">
             <PageTransition pageKey={page + (selectedIncidentId || "")}>
-              {renderPage()}
+              <ErrorBoundary key={page}>
+                {renderPage()}
+              </ErrorBoundary>
             </PageTransition>
           </AnimatePresence>
         </main>

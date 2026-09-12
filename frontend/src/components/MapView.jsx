@@ -62,9 +62,10 @@ function latLonToXYZ(lat, lon, radius = 2) {
 
 /* Disperse items near the same coordinates so they never stack on top of each other */
 function dispersePoints(items, baseSpread = 0.42) {
+  if (!Array.isArray(items)) return [];
   const groups = {};
   items.forEach((item) => {
-    if (typeof item.latitude !== "number" || typeof item.longitude !== "number") return;
+    if (!item || typeof item.latitude !== "number" || typeof item.longitude !== "number") return;
     const key = `${item.latitude.toFixed(1)}_${item.longitude.toFixed(1)}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(item);
@@ -621,6 +622,26 @@ function FlatGridMap({
   );
 }
 
+/* Fail-safe Error Boundary for 3D WebGL Globe */
+class GlobeErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err) {
+    console.warn("Tactical Globe 3D WebGL render exception captured:", err);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
 /* Main Tactical Map View Export */
 export default function MapView({ incidents = [], resources = [], hospitals = [] }) {
   const [viewMode, setViewMode] = useState("3d");
@@ -824,36 +845,50 @@ export default function MapView({ incidents = [], resources = [], hospitals = []
 
       <div className="globe-container" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
         {viewMode === "3d" ? (
-          <Suspense
+          <GlobeErrorBoundary
             fallback={
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                  color: "#64748b",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "13px",
-                }}
-              >
-                Acquiring orbital telemetry feed...
-              </div>
+              <FlatGridMap
+                incidents={incidents}
+                resources={resources}
+                hospitals={hospitals}
+                showIncidents={showIncidents}
+                showHospitals={showHospitals}
+                showResources={showResources}
+                onHover={setHovered}
+              />
             }
           >
-            <GlobeScene
-              incidents={incidents}
-              resources={resources}
-              hospitals={hospitals}
-              showIncidents={showIncidents}
-              showHospitals={showHospitals}
-              showResources={showResources}
-              autoRotate={autoRotate}
-              onHover={setHovered}
-              globeRef={globeRef}
-              controlsRef={controlsRef}
-            />
-          </Suspense>
+            <Suspense
+              fallback={
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    color: "#64748b",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13px",
+                  }}
+                >
+                  Acquiring orbital telemetry feed...
+                </div>
+              }
+            >
+              <GlobeScene
+                incidents={incidents}
+                resources={resources}
+                hospitals={hospitals}
+                showIncidents={showIncidents}
+                showHospitals={showHospitals}
+                showResources={showResources}
+                autoRotate={autoRotate}
+                onHover={setHovered}
+                globeRef={globeRef}
+                controlsRef={controlsRef}
+              />
+            </Suspense>
+          </GlobeErrorBoundary>
         ) : (
           <FlatGridMap
             incidents={incidents}

@@ -11,11 +11,15 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.listIncidents(), api.listResources(), api.listHospitals()])
+    Promise.all([
+      api.listIncidents().catch(() => []),
+      api.listResources().catch(() => []),
+      api.listHospitals().catch(() => []),
+    ])
       .then(([i, r, h]) => {
-        setIncidents(i);
-        setResources(r);
-        setHospitals(h);
+        setIncidents(Array.isArray(i) ? i : []);
+        setResources(Array.isArray(r) ? r : []);
+        setHospitals(Array.isArray(h) ? h : []);
       })
       .finally(() => setLoading(false));
   }, []);
