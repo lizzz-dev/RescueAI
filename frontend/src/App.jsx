@@ -13,6 +13,8 @@ import {
   Radio,
   Clock,
   Activity,
+  Menu,
+  X,
 } from "lucide-react";
 import PageTransition from "./components/PageTransition.jsx";
 import ParticleBackground from "./components/ParticleBackground.jsx";
@@ -36,6 +38,20 @@ const NAV_ITEMS = [
   { id: "analytics", label: "Telemetry & Stats", icon: BarChart3 },
   { id: "notifications", label: "Comms & Alerts", icon: Bell },
   { id: "audit", label: "Audit Ledger", icon: FileText },
+];
+
+const PRIMARY_MOBILE_TABS = [
+  { id: "dashboard", label: "Command", icon: LayoutDashboard },
+  { id: "incidents", label: "Incidents", icon: AlertOctagon },
+  { id: "map", label: "Tactical Map", icon: Map },
+  { id: "resources", label: "Fleets", icon: Truck },
+];
+
+const SECONDARY_MOBILE_TABS = [
+  { id: "hospitals", label: "Trauma & ICU", icon: Building2, desc: "Real-time bed telemetry & ER load" },
+  { id: "analytics", label: "Telemetry & Stats", icon: BarChart3, desc: "District risk metrics & MTTT" },
+  { id: "notifications", label: "Comms & Alerts", icon: Bell, desc: "Broadcast dispatch orders & alerts" },
+  { id: "audit", label: "Audit Ledger", icon: FileText, desc: "Cryptographic chain-of-custody logs" },
 ];
 
 class ErrorBoundary extends React.Component {
@@ -75,6 +91,7 @@ export default function App() {
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [currentTime, setCurrentTime] = useState("");
   const [showOperatorModal, setShowOperatorModal] = useState(false);
+  const [showMobileMore, setShowMobileMore] = useState(false);
   const [activeOperator, setActiveOperator] = useState(() => {
     try {
       const saved = localStorage.getItem("rescueai_active_operator");
@@ -105,11 +122,13 @@ export default function App() {
   const openIncident = (id) => {
     setSelectedIncidentId(id);
     setPage("incident-detail");
+    setShowMobileMore(false);
   };
 
   const navigate = (id) => {
     setSelectedIncidentId(null);
     setPage(id);
+    setShowMobileMore(false);
   };
 
   const renderPage = () => {
@@ -234,6 +253,22 @@ export default function App() {
               <Clock size={14} />
               <span className="clock-highlight">{currentTime || "20:45:00 PKT"}</span>
             </div>
+            {/* Mobile Operator Quick Trigger */}
+            <button
+              className="mobile-operator-badge"
+              onClick={() => setShowOperatorModal(true)}
+              title={`Callsign: ${activeOperator?.name || "Tariq Malik"} // Tap to Switch`}
+              aria-label="Tactical Operator Switcher"
+            >
+              <div
+                className="mobile-operator-avatar"
+                style={{
+                  background: `linear-gradient(135deg, #1e3a8a, ${activeOperator?.color || "var(--cyan)"})`,
+                }}
+              >
+                {activeOperator?.initials || "TM"}
+              </div>
+            </button>
           </div>
         </header>
 
@@ -247,6 +282,108 @@ export default function App() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Fixed Tactical Mobile Bottom Navigation Bar (< 768px) */}
+      <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
+        {PRIMARY_MOBILE_TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = page === tab.id || (tab.id === "incidents" && page === "incident-detail");
+          return (
+            <button
+              key={tab.id}
+              className={`mobile-nav-btn ${isActive ? "active" : ""}`}
+              onClick={() => navigate(tab.id)}
+            >
+              <span className="mobile-nav-icon"><Icon size={18} /></span>
+              <span className="mobile-nav-label">{tab.label}</span>
+            </button>
+          );
+        })}
+        <button
+          className={`mobile-nav-btn ${showMobileMore || SECONDARY_MOBILE_TABS.some((t) => t.id === page) ? "active" : ""}`}
+          onClick={() => setShowMobileMore(!showMobileMore)}
+          aria-expanded={showMobileMore}
+          aria-label="More Tactical Modules"
+        >
+          <span className="mobile-nav-icon">
+            {showMobileMore ? <X size={18} /> : <Menu size={18} />}
+          </span>
+          <span className="mobile-nav-label">More</span>
+        </button>
+      </nav>
+
+      {/* Mobile More Tactical Drawer */}
+      <AnimatePresence>
+        {showMobileMore && (
+          <>
+            <div
+              className="mobile-drawer-backdrop"
+              onClick={() => setShowMobileMore(false)}
+            />
+            <div className="mobile-drawer-sheet">
+              <div className="mobile-drawer-handle" />
+              <div className="mobile-drawer-header">
+                <div>
+                  <div className="mobile-drawer-title">Tactical Modules</div>
+                  <div className="mobile-drawer-subtitle">RescueAI Operations & Telemetry</div>
+                </div>
+                <button
+                  className="mobile-drawer-close"
+                  onClick={() => setShowMobileMore(false)}
+                  aria-label="Close Drawer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Active Operator Quick Switch in Drawer */}
+              <div
+                className="mobile-drawer-operator"
+                onClick={() => {
+                  setShowMobileMore(false);
+                  setShowOperatorModal(true);
+                }}
+                role="button"
+                tabIndex={0}
+              >
+                <div
+                  className="mobile-drawer-op-avatar"
+                  style={{
+                    background: `linear-gradient(135deg, #1e3a8a, ${activeOperator?.color || "var(--cyan)"})`,
+                  }}
+                >
+                  {activeOperator?.initials || "TM"}
+                </div>
+                <div className="mobile-drawer-op-info">
+                  <div className="mobile-drawer-op-name">{activeOperator?.name || "Tariq Malik"}</div>
+                  <div className="mobile-drawer-op-role">{activeOperator?.role || "COMMANDER // NDMA 1122"}</div>
+                </div>
+                <div className="mobile-drawer-op-badge">SWITCH</div>
+              </div>
+
+              <div className="mobile-drawer-list">
+                {SECONDARY_MOBILE_TABS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = page === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      className={`mobile-drawer-item ${isActive ? "active" : ""}`}
+                      onClick={() => navigate(item.id)}
+                    >
+                      <div className="mobile-drawer-item-icon"><Icon size={18} /></div>
+                      <div className="mobile-drawer-item-text">
+                        <div className="mobile-drawer-item-title">{item.label}</div>
+                        <div className="mobile-drawer-item-desc">{item.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Tactical Callsign & Operator Switcher Modal */}
       <AnimatePresence>
