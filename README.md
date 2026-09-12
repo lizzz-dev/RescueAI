@@ -1,5 +1,6 @@
 # RescueAI — Tactical AI Emergency Response & Operations Command
 
+[![Vercel](https://img.shields.io/badge/Vercel-Live%20Deployment-black?logo=vercel&logoColor=white)](https://rescue-ai-mocha.vercel.app)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![React 18](https://img.shields.io/badge/React-18.3-61dafb.svg)](https://react.dev)
@@ -7,6 +8,9 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
 An AI-driven emergency decision-support platform that transforms fragmented, contradictory disaster reports into an explainable, resource-aware, and **human-authorized** response plan in seconds.
+
+> 🚀 **Live Production Deployment**: [https://rescue-ai-mocha.vercel.app](https://rescue-ai-mocha.vercel.app)  
+> 📖 **Product Requirements Document**: [PRD.md](PRD.md) | [Download RescueAI_PRD.docx](RescueAI_PRD.docx)
 
 > **Safety Principle**: RescueAI never autonomously dispatches real emergency personnel. Every AI recommendation flows through:  
 > `Emergency Report → Multi-Agent Analysis → Explainable Recommendation → Human Commander Review → Authorized Simulated Dispatch`.
@@ -176,19 +180,17 @@ npm run dev
 
 ---
 
-## 3. Deployment: Hugging Face Spaces
+## 3. Production Cloud Deployment: Vercel
 
-This repository is pre-configured for one-click deployment on **Hugging Face Spaces (Docker)**:
+RescueAI is fully configured for continuous, zero-cost deployment on **Vercel**:
 
-1. Create a new Space at [huggingface.co/new-space](https://huggingface.co/new-space).
-2. Set Space Name, select **SDK = Docker**, and choose the **free CPU basic** tier.
-3. Push this repository to your Space:
-   ```bash
-   git remote add space https://huggingface.co/spaces/<your-username>/<your-space-name>
-   git push space main
-   ```
-4. Hugging Face automatically detects the root `Dockerfile` and deploys the unified app on port `7860`.
-   *(Space metadata: `title: RescueAI`, `emoji: 🚨`, `sdk: docker`, `app_port: 7860`)*
+- **Frontend Client**: High-performance React 18 SPA built with Vite (`frontend/dist` & `public/`).
+- **Serverless API Backend**: Native Python 3.11 FastAPI runtime handled via `api/index.py`, executing all 6 autonomous agents, SQLAlchemy ORM, and RAG knowledge retrieval.
+- **Inter-Agency Pre-Seeded Dataset**: Automatically seeds 70+ incidents, 89+ trauma hospitals, and 250+ rescue fleet units across 27+ districts on initial load.
+- **Production URL**: [https://rescue-ai-mocha.vercel.app](https://rescue-ai-mocha.vercel.app)
+
+### Automated CI/CD
+Every commit pushed to GitHub (`main`) automatically triggers Vercel to build the React application and deploy the serverless Python endpoints with zero manual intervention.
 
 ---
 
