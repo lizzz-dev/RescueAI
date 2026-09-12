@@ -80,7 +80,7 @@ export default function App() {
       const saved = localStorage.getItem("rescueai_active_operator");
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    return OPERATOR_PRESETS[0]; // Defaults to OPERATOR-01 // TACTICAL CONTROLLER // NDMA HQ
+    return OPERATOR_PRESETS[1]; // Defaults to Tariq Malik // COMMANDER // NDMA 1122
   });
 
   const handleSelectOperator = (op) => {

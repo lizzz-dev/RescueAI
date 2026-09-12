@@ -1,11 +1,4 @@
-const IS_LOCAL =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1");
-
-// On localhost, proxy via local Vite dev server. On public hosting (Vercel), connect to the live Cloudflare tunnel API
-const LIVE_BACKEND = "https://west-charged-new-wholesale.trycloudflare.com/api";
-const BASE = IS_LOCAL ? "/api" : LIVE_BACKEND;
+const BASE = "/api";
 
 async function request(path, options = {}) {
   let res;
@@ -16,25 +9,8 @@ async function request(path, options = {}) {
       headers: { "Content-Type": "application/json" },
       ...options,
     });
-    const contentType = res.headers.get("content-type") || "";
-    // If the response is HTML (e.g. Vercel SPA rewrite fallback instead of API JSON), failover to live tunnel
-    if (contentType.includes("text/html") && BASE !== LIVE_BACKEND) {
-      res = await fetch(`${LIVE_BACKEND}${path}`, {
-        headers: { "Content-Type": "application/json" },
-        ...options,
-      });
-    }
   } catch (err) {
-    if (BASE !== LIVE_BACKEND) {
-      try {
-        res = await fetch(`${LIVE_BACKEND}${path}`, {
-          headers: { "Content-Type": "application/json" },
-          ...options,
-        });
-      } catch (e) {
-        // let final handler throw
-      }
-    }
+    throw new Error(`500: Network Error (${err.message || err})`);
   }
 
   if (!res || !res.ok) {

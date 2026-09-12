@@ -1,4 +1,3 @@
-backend/
 *.db
 cloudflared.exe
 .pytest_cache/

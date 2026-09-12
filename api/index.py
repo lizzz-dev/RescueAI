@@ -1,7 +1,15 @@
-from fastapi import FastAPI
+import os
+import sys
 
-app = FastAPI(title="RescueAI")
+# Ensure root and backend directories are in sys.path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+backend_dir = os.path.join(root_dir, "backend")
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok", "service": "RescueAI"}
+for path in [root_dir, backend_dir]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+from backend.main import app
+
+# Vercel serverless entrypoint
+handler = app
