@@ -1,4 +1,3 @@
-api/
 backend/
 *.db
 cloudflared.exe
