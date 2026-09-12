@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
   AlertOctagon,
@@ -40,20 +40,6 @@ const NAV_ITEMS = [
   { id: "audit", label: "Audit Ledger", icon: FileText },
 ];
 
-const PRIMARY_MOBILE_TABS = [
-  { id: "dashboard", label: "Command", icon: LayoutDashboard },
-  { id: "incidents", label: "Incidents", icon: AlertOctagon },
-  { id: "map", label: "Tactical Map", icon: Map },
-  { id: "resources", label: "Fleets", icon: Truck },
-];
-
-const SECONDARY_MOBILE_TABS = [
-  { id: "hospitals", label: "Trauma & ICU", icon: Building2, desc: "Real-time bed telemetry & ER load" },
-  { id: "analytics", label: "Telemetry & Stats", icon: BarChart3, desc: "District risk metrics & MTTT" },
-  { id: "notifications", label: "Comms & Alerts", icon: Bell, desc: "Broadcast dispatch orders & alerts" },
-  { id: "audit", label: "Audit Ledger", icon: FileText, desc: "Cryptographic chain-of-custody logs" },
-];
-
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -91,7 +77,7 @@ export default function App() {
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [currentTime, setCurrentTime] = useState("");
   const [showOperatorModal, setShowOperatorModal] = useState(false);
-  const [showMobileMore, setShowMobileMore] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const [activeOperator, setActiveOperator] = useState(() => {
     try {
       const saved = localStorage.getItem("rescueai_active_operator");
@@ -122,13 +108,13 @@ export default function App() {
   const openIncident = (id) => {
     setSelectedIncidentId(id);
     setPage("incident-detail");
-    setShowMobileMore(false);
+    setShowMobileNav(false);
   };
 
   const navigate = (id) => {
     setSelectedIncidentId(null);
     setPage(id);
-    setShowMobileMore(false);
+    setShowMobileNav(false);
   };
 
   const renderPage = () => {
@@ -239,6 +225,15 @@ export default function App() {
       <div className="main-wrapper">
         <header className="telemetry-header">
           <div className="telemetry-left">
+            {/* Mobile / Tablet Hamburger Button */}
+            <button
+              className="mobile-hamburger-btn"
+              onClick={() => setShowMobileNav(true)}
+              aria-label="Open Tactical Navigation Menu"
+            >
+              <Menu size={20} />
+            </button>
+
             <div className="telemetry-pill">
               <span className="live-indicator"></span>
               LIVE TELEMETRY // AI ENGINE ACTIVE
@@ -283,104 +278,107 @@ export default function App() {
         </main>
       </div>
 
-      {/* Fixed Tactical Mobile Bottom Navigation Bar (< 768px) */}
-      <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
-        {PRIMARY_MOBILE_TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = page === tab.id || (tab.id === "incidents" && page === "incident-detail");
-          return (
-            <button
-              key={tab.id}
-              className={`mobile-nav-btn ${isActive ? "active" : ""}`}
-              onClick={() => navigate(tab.id)}
-            >
-              <span className="mobile-nav-icon"><Icon size={18} /></span>
-              <span className="mobile-nav-label">{tab.label}</span>
-            </button>
-          );
-        })}
-        <button
-          className={`mobile-nav-btn ${showMobileMore || SECONDARY_MOBILE_TABS.some((t) => t.id === page) ? "active" : ""}`}
-          onClick={() => setShowMobileMore(!showMobileMore)}
-          aria-expanded={showMobileMore}
-          aria-label="More Tactical Modules"
-        >
-          <span className="mobile-nav-icon">
-            {showMobileMore ? <X size={18} /> : <Menu size={18} />}
-          </span>
-          <span className="mobile-nav-label">More</span>
-        </button>
-      </nav>
-
-      {/* Mobile More Tactical Drawer */}
+      {/* Tactical Mobile Slide-Out Drawer Menu */}
       <AnimatePresence>
-        {showMobileMore && (
+        {showMobileNav && (
           <>
-            <div
+            <motion.div
               className="mobile-drawer-backdrop"
-              onClick={() => setShowMobileMore(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setShowMobileNav(false)}
             />
-            <div className="mobile-drawer-sheet">
-              <div className="mobile-drawer-handle" />
-              <div className="mobile-drawer-header">
-                <div>
-                  <div className="mobile-drawer-title">Tactical Modules</div>
-                  <div className="mobile-drawer-subtitle">RescueAI Operations & Telemetry</div>
+            <motion.aside
+              className="mobile-tactical-drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+            >
+              <div className="mobile-drawer-brand-row">
+                <div
+                  className="sidebar-brand"
+                  style={{ margin: 0, padding: 0, borderBottom: "none" }}
+                  onClick={() => navigate("dashboard")}
+                  title="Return to Command Center"
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="brand-icon-box">
+                    <ShieldAlert size={22} />
+                  </div>
+                  <div>
+                    <div className="brand-title">RESCUE.AI</div>
+                    <div className="brand-subtitle">
+                      <span className="badge-dot"></span>
+                      TACTICAL EOC
+                    </div>
+                  </div>
                 </div>
                 <button
-                  className="mobile-drawer-close"
-                  onClick={() => setShowMobileMore(false)}
-                  aria-label="Close Drawer"
+                  className="mobile-drawer-close-btn"
+                  onClick={() => setShowMobileNav(false)}
+                  aria-label="Close Navigation"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
 
-              {/* Active Operator Quick Switch in Drawer */}
-              <div
-                className="mobile-drawer-operator"
-                onClick={() => {
-                  setShowMobileMore(false);
-                  setShowOperatorModal(true);
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div
-                  className="mobile-drawer-op-avatar"
-                  style={{
-                    background: `linear-gradient(135deg, #1e3a8a, ${activeOperator?.color || "var(--cyan)"})`,
-                  }}
-                >
-                  {activeOperator?.initials || "TM"}
-                </div>
-                <div className="mobile-drawer-op-info">
-                  <div className="mobile-drawer-op-name">{activeOperator?.name || "Tariq Malik"}</div>
-                  <div className="mobile-drawer-op-role">{activeOperator?.role || "COMMANDER // NDMA 1122"}</div>
-                </div>
-                <div className="mobile-drawer-op-badge">SWITCH</div>
-              </div>
-
-              <div className="mobile-drawer-list">
-                {SECONDARY_MOBILE_TABS.map((item) => {
+              <div className="nav-section-label" style={{ marginTop: "12px" }}>Operations</div>
+              <nav className="mobile-drawer-nav">
+                {NAV_ITEMS.map((item) => {
                   const Icon = item.icon;
-                  const isActive = page === item.id;
+                  const isActive = page === item.id || (item.id === "incidents" && page === "incident-detail");
                   return (
                     <button
                       key={item.id}
-                      className={`mobile-drawer-item ${isActive ? "active" : ""}`}
+                      className={`nav-item ${isActive ? "active" : ""}`}
                       onClick={() => navigate(item.id)}
                     >
-                      <div className="mobile-drawer-item-icon"><Icon size={18} /></div>
-                      <div className="mobile-drawer-item-text">
-                        <div className="mobile-drawer-item-title">{item.label}</div>
-                        <div className="mobile-drawer-item-desc">{item.desc}</div>
-                      </div>
+                      <span className="nav-icon"><Icon size={17} /></span>
+                      <span>{item.label}</span>
                     </button>
                   );
                 })}
+              </nav>
+
+              <div className="sidebar-footer" style={{ marginTop: "auto" }}>
+                <div
+                  className="commander-badge interactive"
+                  onClick={() => {
+                    setShowMobileNav(false);
+                    setShowOperatorModal(true);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  title="Click to Switch Tactical Callsign or Operational Role"
+                >
+                  <div
+                    className="commander-avatar"
+                    style={{
+                      background: `linear-gradient(135deg, #1e3a8a, ${activeOperator?.color || "var(--cyan)"})`,
+                    }}
+                  >
+                    {activeOperator?.initials || "OP"}
+                  </div>
+                  <div className="commander-info">
+                    <div className="commander-info-title-row">
+                      <span className="commander-info-title">{activeOperator?.name || "OPERATOR-01"}</span>
+                      <span className="commander-status-dot" title="COMMS ONLINE // ENCRYPTED"></span>
+                    </div>
+                    <div className="commander-info-role">{activeOperator?.role || "TACTICAL CONTROLLER // NDMA HQ"}</div>
+                  </div>
+                  <div className="commander-switch-hint">
+                    <span>SWITCH</span>
+                  </div>
+                </div>
+                <p className="sidebar-disclaimer">
+                  Decision-support telemetry only. Real-world dispatch strictly requires human commander authorization.
+                </p>
               </div>
-            </div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
