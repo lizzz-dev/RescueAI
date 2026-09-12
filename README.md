@@ -27,6 +27,7 @@ An AI-driven emergency decision-support platform that transforms fragmented, con
 - 🎯 **Tactical Incident Registry & Filters**: Multi-criteria filtering by Status (`REPORTED`, `TRIAGED`, `DISPATCHED`, `RESOLVED`), Severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`), and Type, paired with a dynamic results counter.
 - 📍 **City Quick-Pick & GPS Auto-Fill**: Streamlined emergency intake modal with a 29-city dropdown that automatically populates precise GPS coordinates for accurate geospatial mapping.
 - 🛡️ **DEFCON Readiness & Live Telemetry**: Dynamic command-center layout with DEFCON status, live PKT timestamp, and animated telemetry indicators.
+- 📱 **Mobile & Field Command Mode**: Fully responsive tactical UX with an animated slide-out hamburger drawer menu (`<= 960px`), compact telemetry HUD, and touch-optimized viewports for field commanders on smartphones and tablets.
 
 ---
 

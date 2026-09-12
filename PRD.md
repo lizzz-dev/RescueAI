@@ -173,7 +173,8 @@ RescueAI enforces strict military/disaster management operational roles. Arbitra
 ### 5.1 Frontend Architecture
 - **Framework**: React 18.3 + Vite 5.4
 - **3D Graphics Engine**: Three.js 0.161 + React Three Fiber 8.18 + React Three Drei 9.122
-- **Animation & Transitions**: Framer Motion 11.18
+- **Animation & Transitions**: Framer Motion 11.18 (Page transitions, Spring physics for mobile drawer)
+- **Responsive Navigation**: Adaptive Tactical Hamburger Drawer (`<= 960px`) unlocking 100% viewport width for cards and maps; full 264px persistent sidebar for desktop displays (`> 960px`).
 - **Iconography**: Lucide React
 - **Data Visualization**: Recharts 2.12
 - **Network Client**: Fetch API with unified `/api` routing and automated JSON error deserialization.
@@ -357,7 +358,7 @@ RescueAI directly operationalizes and accelerates five core **UN Sustainable Dev
 | **UI Stability** | 0% unhandled blank-screen crashes | Enforced via React `ErrorBoundary` and `GlobeErrorBoundary` |
 | **Human-In-The-Loop** | 100% human confirmation required for dispatch | Enforced via mandatory `approved_by` operator signing |
 | **Data Integrity** | Real geodetic coordinates across 29 Pakistani districts | Verified via Haversine geographic boundary validation |
-| **Accessibility & Mobile** | Fully responsive layout down to 360px viewport | Responsive flex/grid with touch-enabled 3D orbit controls |
+| **Accessibility & Mobile** | Fully responsive layout down to 360px viewport | Tactical slide-out hamburger drawer (`<= 960px`), responsive flex/grid, compact telemetry HUD, and touch-enabled 3D orbit controls |
 
 ---
 
